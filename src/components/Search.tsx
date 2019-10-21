@@ -1,18 +1,13 @@
 import React from "react";
 import { Subject } from "rxjs";
 import { Observable, EMPTY } from "rxjs";
-import {
-  debounceTime,
-  map,
-  distinctUntilChanged,
-  switchMap
-} from "rxjs/operators";
+import { debounceTime, distinctUntilChanged, switchMap } from "rxjs/operators";
 import { from } from "rxjs";
 import axios from "axios";
 
 class Search extends React.Component {
-  state = {
-    users: ""
+  state: { users: any[] } = {
+    users: []
   };
 
   searchTerm$ = new Subject<string>();
@@ -23,9 +18,7 @@ class Search extends React.Component {
 
   componentDidMount() {
     this.search(this.searchTerm$).subscribe(results => {
-      if (results) {
-        console.log(results.data);
-      }
+      this.setState({ users: results.data.items });
     });
   }
 
@@ -41,6 +34,7 @@ class Search extends React.Component {
     if (term) {
       return from(axios.get("https://api.github.com/search/users?q=" + term));
     } else {
+      this.setState({ users: [] });
       return EMPTY;
     }
   }
@@ -52,7 +46,24 @@ class Search extends React.Component {
           Search User
           <input type="text" onKeyUp={this.update.bind(this)} />
         </label>
-        <p>{this.state.users}</p>
+        <table>
+          <thead>
+            <tr>
+              <th>Username</th>
+              <th>Avatar</th>
+            </tr>
+          </thead>
+          <tbody>
+            {this.state.users.map(user => (
+              <tr key={user.id}>
+                <td>{user.login}</td>
+                <td>
+                  <img src={user.avatar_url} alt="" />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     );
   }
