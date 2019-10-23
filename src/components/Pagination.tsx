@@ -6,14 +6,7 @@ export interface Props {
   handlePagination: any;
 }
 
-export interface State {
-  buttonConfig: { url: string; title: string }[];
-}
-
-class Pagination extends React.Component<Props, State> {
-  state = {
-    buttonConfig: []
-  };
+class Pagination extends React.Component<Props> {
   getPaginationLinks(link: string) {
     const links: string[] = link.split(",");
     return links.map(a => {
