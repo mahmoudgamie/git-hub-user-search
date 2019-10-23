@@ -1,101 +1,20 @@
-import React from "react";
-import Search from "./components/Search";
-import Pagination from "./components/Pagination";
-import User from "./models/User";
-import axios from "axios";
-import { Subject } from "rxjs";
-import { Observable, EMPTY } from "rxjs";
-import { debounceTime, distinctUntilChanged, switchMap } from "rxjs/operators";
-import { from } from "rxjs";
+import * as React from "react";
+import { BrowserRouter, Switch, Route, Redirect } from "react-router-dom";
+import Home from "./components/Home";
+import ViewUser from "./components/View-user";
 
-// export interface Props {}
+export interface Props {}
 
-export interface State {
-  users: User[];
-  paginationLink: string;
-  pageCount: number;
-}
-
-class App extends React.Component {
-  state: State = {
-    users: [],
-    paginationLink: "",
-    pageCount: 0
-  };
-
-  searchTerm$ = new Subject<string>();
-
-  componentDidMount() {
-    this.search(this.searchTerm$).subscribe(res => {
-      this.setState({
-        users: res.data.items,
-        paginationLink: res.headers.link,
-        pageCount: res.data.total_count
-      });
-    });
-  }
-
-  search(terms: Observable<string>): Observable<any> {
-    return terms.pipe(
-      debounceTime(400),
-      distinctUntilChanged(),
-      switchMap(term => this.fetchData(term))
-    );
-  }
-
-  fetchData(term: string, url?: string): Observable<any> {
-    axios.defaults.headers = {
-      Accept: "application/vnd.github.v3+json"
-    };
-    if (term) {
-      return from(axios.get(`https://api.github.com/search/users?q=${term}`));
-    } else {
-      this.setState({ users: [] });
-      return EMPTY;
-    }
-  }
-
-  update = (e: any) => {
-    this.searchTerm$.next(e.target.value);
-  };
-
-  handlePagination = (url: string) => {
-    axios.get(url).then(res => {
-      this.setState({ paginationLink: res.headers.link });
-      this.setState({ users: res.data.items });
-    });
-  };
-
-  render() {
-    return (
-      <div>
-        <Search searchValue={this.update} />
-        <Pagination
-          pageCount={this.state.pageCount}
-          url={this.state.paginationLink}
-          handlePagination={this.handlePagination}
-        />
-        <table>
-          <thead>
-            <tr>
-              <th>Username</th>
-              <th>Avatar</th>
-            </tr>
-          </thead>
-          <tbody>
-            {this.state.users.map(user => (
-              <tr key={user.id}>
-                <td>{user.login}</td>
-                <td>
-                  <img src={user.avatar_url} alt="" />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    );
-  }
-}
+const App: React.FC<Props> = () => {
+  return (
+    <BrowserRouter>
+      <Switch>
+        <Route exact path="/home" component={Home} />
+        <Route exact path="/view-user" component={ViewUser} />
+        <Redirect to="/home" />
+      </Switch>
+    </BrowserRouter>
+  );
+};
 
 export default App;
