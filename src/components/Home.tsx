@@ -7,8 +7,7 @@ import { Subject } from "rxjs";
 import { Observable, EMPTY } from "rxjs";
 import { debounceTime, distinctUntilChanged, switchMap } from "rxjs/operators";
 import { from } from "rxjs";
-
-// export interface Props {}
+import { Link } from "react-router-dom";
 
 export interface State {
   users: User[];
@@ -16,7 +15,7 @@ export interface State {
   pageCount: number;
 }
 
-class Home extends React.Component {
+class Home extends React.Component<{}, State> {
   state: State = {
     users: [],
     paginationLink: "",
@@ -85,7 +84,9 @@ class Home extends React.Component {
           <tbody>
             {this.state.users.map(user => (
               <tr key={user.id}>
-                <td>{user.login}</td>
+                <td>
+                  <Link to={`/view-user/${user.login}`}>{user.login}</Link>
+                </td>
                 <td>
                   <img src={user.avatar_url} alt="" />
                 </td>
