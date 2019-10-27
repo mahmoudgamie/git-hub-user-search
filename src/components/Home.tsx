@@ -8,6 +8,7 @@ import { Observable, EMPTY } from "rxjs";
 import { debounceTime, distinctUntilChanged, switchMap } from "rxjs/operators";
 import { from } from "rxjs";
 import { Link } from "react-router-dom";
+import "./Home.css";
 
 export interface State {
   users: User[];
@@ -100,33 +101,32 @@ class Home extends React.Component<{}, State> {
 
   render() {
     return (
-      <div className="container">
+      <div>
         <Search searchValue={this.update} />
+
         <Pagination
           pageCount={this.state.pageCount}
           url={this.state.paginationLink}
           handlePagination={this.handlePagination}
         />
-        <table>
-          <thead>
-            <tr>
-              <th>Username</th>
-              <th>Avatar</th>
-            </tr>
-          </thead>
-          <tbody>
-            {this.state.users.map(user => (
-              <tr key={user.id}>
-                <td>
-                  <Link to={`/view-user/${user.login}`}>{user.login}</Link>
-                </td>
-                <td>
-                  <img src={user.avatar_url} alt="" />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="container">
+          {this.state.users.map(user => (
+            <Link key={user.id} to={`/view-user/${user.login}`}>
+              <div className="card">
+                <div className="card-image">
+                  <img
+                    width="100%"
+                    height="100%"
+                    className="img"
+                    src={user.avatar_url}
+                    alt=""
+                  />
+                </div>
+                <div className="card-text">{user.login}</div>
+              </div>
+            </Link>
+          ))}
+        </div>
       </div>
     );
   }
