@@ -3,7 +3,7 @@ import Search from "./Search";
 import Pagination from "./Pagination";
 import User from "../models/User";
 import axios from "axios";
-import { Subject } from "rxjs";
+import { Subject, Subscription } from "rxjs";
 import { Observable, EMPTY } from "rxjs";
 import { debounceTime, distinctUntilChanged, switchMap } from "rxjs/operators";
 import { from } from "rxjs";
@@ -21,25 +21,46 @@ class Home extends React.Component<{}, State> {
     paginationLink: "",
     pageCount: 0
   };
-
+  subscription$: Subscription = new Subscription();
   searchTerm$ = new Subject<string>();
 
   componentDidMount() {
-    this.search(this.searchTerm$).subscribe(res => {
-      this.setState({
-        users: res.data.items,
-        paginationLink: res.headers.link,
-        pageCount: res.data.total_count
-      });
+    const cashedData = sessionStorage.getItem("data");
+    const paginationLink = sessionStorage.getItem("paginationLink");
+    if (cashedData) this.setState({ users: JSON.parse(cashedData)["items"] });
+    if (paginationLink) this.setState({ paginationLink: paginationLink });
+
+    this.subscription$ = this.search(this.searchTerm$).subscribe(res => {
+      if (res) {
+        this.setState({
+          users: res.data.items,
+          paginationLink: res.headers.link,
+          pageCount: res.data.total_count
+        });
+        this.cashData(res);
+      }
     });
   }
 
-  search(terms: Observable<string>): Observable<any> {
-    return terms.pipe(
-      debounceTime(400),
-      distinctUntilChanged(),
-      switchMap(term => this.fetchData(term))
-    );
+  componentWillUnmount() {
+    this.subscription$.unsubscribe();
+  }
+
+  search(terms?: Observable<string>): Observable<any> {
+    if (terms) {
+      return terms.pipe(
+        debounceTime(400),
+        distinctUntilChanged(),
+        switchMap(term => this.fetchData(term))
+      );
+    } else {
+      return EMPTY;
+    }
+  }
+
+  cashData(res: any) {
+    sessionStorage.setItem("data", JSON.stringify(res.data));
+    sessionStorage.setItem("paginationLink", res.headers.link);
   }
 
   fetchData(term: string, url?: string): Observable<any> {
@@ -47,9 +68,17 @@ class Home extends React.Component<{}, State> {
       Accept: "application/vnd.github.v3+json"
     };
     if (term) {
-      return from(axios.get(`https://api.github.com/search/users?q=${term}`));
+      return from(
+        axios
+          .get(`https://api.github.com/search/users?q=${term}`)
+          .catch(err => console.log(err))
+      );
     } else {
-      this.setState({ users: [] });
+      this.setState({
+        users: [],
+        paginationLink: "",
+        pageCount: 0
+      });
       return EMPTY;
     }
   }
@@ -59,15 +88,19 @@ class Home extends React.Component<{}, State> {
   };
 
   handlePagination = (url: string) => {
-    axios.get(url).then(res => {
-      this.setState({ paginationLink: res.headers.link });
-      this.setState({ users: res.data.items });
-    });
+    axios
+      .get(url)
+      .then(res => {
+        this.setState({ paginationLink: res.headers.link });
+        this.setState({ users: res.data.items });
+        this.cashData(res);
+      })
+      .catch(err => console.log(err));
   };
 
   render() {
     return (
-      <div>
+      <div className="container">
         <Search searchValue={this.update} />
         <Pagination
           pageCount={this.state.pageCount}

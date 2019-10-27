@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import "./Search.css";
 
 export interface ISearchState {
   username: string;
@@ -20,17 +21,38 @@ class Search extends React.Component<ISearchProps, ISearchState> {
 
   render() {
     return (
-      <div>
-        <label>
-          Search User
-          <input type="text" onKeyUp={e => this.props.searchValue(e)} />
-        </label>
-
-        <label>
-          Type in a user name
-          <input type="text" onKeyUp={e => this.setUsername(e)} />
-        </label>
-        <Link to={`/view-user/${this.state.username}`}>Go to user Details</Link>
+      <div className="search-container">
+        <div className="field-control">
+          <label>
+            Search User
+            <input
+              className="search-input"
+              type="text"
+              placeholder="Search..."
+              onKeyUp={e => this.props.searchValue(e)}
+            />
+          </label>
+        </div>
+        <form>
+          <div className="field-control">
+            <label>
+              Go to user
+              <div className="search-box-wrapper">
+                <input
+                  type="text"
+                  className="search-box-input"
+                  placeholder="Type in a username"
+                  onKeyUp={e => this.setUsername(e)}
+                />
+                <Link className="link" to={`/view-user/${this.state.username}`}>
+                  <button className="search-box-btn" type="submit">
+                    &#128269;
+                  </button>
+                </Link>
+              </div>
+            </label>
+          </div>
+        </form>
       </div>
     );
   }

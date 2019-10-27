@@ -46,7 +46,8 @@ class ViewUser extends React.Component<IViewUserProps, IVeiwUserState> {
         });
         this.fetchRepos();
         this.fetchStarred();
-      });
+      })
+      .catch(err => console.log(err));
   }
 
   fetchRepos() {
@@ -59,7 +60,8 @@ class ViewUser extends React.Component<IViewUserProps, IVeiwUserState> {
       })
       .then(res => {
         this.setState({ repos: res.data });
-      });
+      })
+      .catch(err => console.log(err));
   }
 
   fetchStarred() {
@@ -75,6 +77,9 @@ class ViewUser extends React.Component<IViewUserProps, IVeiwUserState> {
       })
       .then(res => {
         this.setState({ lastStarred: res.data });
+      })
+      .catch(err => {
+        console.log(err);
       });
   }
 
