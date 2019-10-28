@@ -1,6 +1,7 @@
 import React from "react";
 import { RouteComponentProps } from "react-router-dom";
 import axios from "axios";
+import "./View-user.css";
 
 export interface IViewUserProps
   extends RouteComponentProps<{ username: string }> {}
@@ -85,22 +86,53 @@ class ViewUser extends React.Component<IViewUserProps, IVeiwUserState> {
 
   render() {
     return (
-      <div>
-        <p>{this.state.name}</p>
-        <p>{this.state.location}</p>
-        <p>{this.state.followers}</p>
-        <img src={this.state.avatar} alt={this.state.name} />
-        <ul>
-          {this.state.lastStarred.map(starred => (
-            <li key={starred.repo.id}>{starred.repo.full_name}</li>
-          ))}
-        </ul>
-        <ul>
-          {this.state.repos.map(repo => (
-            <li key={repo.id}>{repo.full_name}</li>
-          ))}
-        </ul>
-      </div>
+      <section className="main-container">
+        <div className="details-container">
+          <h3 className="main-title">General Info:</h3>
+          <ul>
+            <li>
+              <span className="info-title">
+                Name: <span>{this.state.name}</span>
+              </span>
+            </li>
+            <li>
+              <span className="info-title">
+                Location: <span>{this.state.location}</span>
+              </span>
+            </li>
+            <li>
+              <span className="info-title">
+                Number Of Followers: <span>{this.state.followers}</span>
+              </span>
+            </li>
+          </ul>
+          <h3 className="main-title">Last 5 Repos:</h3>
+          <ul>
+            {this.state.lastStarred.map(starred => (
+              <li key={starred.repo.id}>
+                <span>{starred.repo.full_name}</span>
+              </li>
+            ))}
+          </ul>
+          <h3 className="main-title">Last 5 Starred Repos:</h3>
+          <ul>
+            {this.state.repos.map(repo => (
+              <li key={repo.id}>
+                <span>{repo.full_name}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="img-container">
+          <img
+            width="100%"
+            height="100%"
+            className="img"
+            src={this.state.avatar}
+            alt={this.state.name}
+          />
+        </div>
+      </section>
     );
   }
 }

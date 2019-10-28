@@ -101,7 +101,7 @@ class Home extends React.Component<{}, State> {
 
   render() {
     return (
-      <div>
+      <section>
         <Search searchValue={this.update} />
 
         <Pagination
@@ -127,7 +127,7 @@ class Home extends React.Component<{}, State> {
             </Link>
           ))}
         </div>
-      </div>
+      </section>
     );
   }
 }
