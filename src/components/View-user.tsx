@@ -14,6 +14,9 @@ export interface IVeiwUserState {
   followers: number | null;
   location: string;
   lastStarred: any[];
+  error: any;
+  lastStarredError: any;
+  reposError: any;
 }
 
 class ViewUser extends React.Component<IViewUserProps, IVeiwUserState> {
@@ -26,7 +29,10 @@ class ViewUser extends React.Component<IViewUserProps, IVeiwUserState> {
       avatar: "",
       followers: null,
       location: "",
-      lastStarred: []
+      lastStarred: [],
+      error: {},
+      lastStarredError: {},
+      reposError: {}
     };
   }
 
@@ -48,7 +54,11 @@ class ViewUser extends React.Component<IViewUserProps, IVeiwUserState> {
         this.fetchRepos();
         this.fetchStarred();
       })
-      .catch(err => console.log(err));
+      .catch(err => {
+        this.setState({
+          error: err.response
+        });
+      });
   }
 
   fetchRepos() {
@@ -62,7 +72,9 @@ class ViewUser extends React.Component<IViewUserProps, IVeiwUserState> {
       .then(res => {
         this.setState({ repos: res.data });
       })
-      .catch(err => console.log(err));
+      .catch(err => {
+        this.setState({ reposError: err.response });
+      });
   }
 
   fetchStarred() {
@@ -80,59 +92,105 @@ class ViewUser extends React.Component<IViewUserProps, IVeiwUserState> {
         this.setState({ lastStarred: res.data });
       })
       .catch(err => {
-        console.log(err);
+        this.setState({ lastStarredError: err.response });
       });
   }
 
   render() {
+    const {
+      username,
+      repos,
+      name,
+      avatar,
+      followers,
+      location,
+      lastStarred,
+      error,
+      lastStarredError,
+      reposError
+    } = this.state;
     return (
-      <section className="main-container">
-        <div className="details-container">
-          <h3 className="main-title">General Info:</h3>
-          <ul>
-            <li>
-              <span className="info-title">
-                Name: <span>{this.state.name}</span>
-              </span>
-            </li>
-            <li>
-              <span className="info-title">
-                Location: <span>{this.state.location}</span>
-              </span>
-            </li>
-            <li>
-              <span className="info-title">
-                Number Of Followers: <span>{this.state.followers}</span>
-              </span>
-            </li>
-          </ul>
-          <h3 className="main-title">Last 5 Repos:</h3>
-          <ul>
-            {this.state.lastStarred.map(starred => (
-              <li key={starred.repo.id}>
-                <span>{starred.repo.full_name}</span>
-              </li>
-            ))}
-          </ul>
-          <h3 className="main-title">Last 5 Starred Repos:</h3>
-          <ul>
-            {this.state.repos.map(repo => (
-              <li key={repo.id}>
-                <span>{repo.full_name}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-        <div className="img-container">
-          <img
-            width="100%"
-            height="100%"
-            className="img"
-            src={this.state.avatar}
-            alt={this.state.name}
-          />
-        </div>
-      </section>
+      <React.Fragment>
+        {(!error.status || !error["data"]) && (
+          <section className="main-container">
+            <div className="details-container">
+              <h3 className="main-title">General Info:</h3>
+              <ul>
+                <li>
+                  <span className="info-title">
+                    Name: <span>{name}</span>
+                  </span>
+                </li>
+                <li>
+                  <span className="info-title">
+                    Location: <span>{location}</span>
+                  </span>
+                </li>
+                <li>
+                  <span className="info-title">
+                    Number Of Followers: <span>{followers}</span>
+                  </span>
+                </li>
+              </ul>
+              <h3 className="main-title">Last 5 Repos:</h3>
+              <ul>
+                {(!reposError.status || !reposError["data"]) &&
+                  repos.map(repo => (
+                    <li key={repo.id}>
+                      <span>{repo.full_name}</span>
+                    </li>
+                  ))}
+              </ul>
+              <div className="error-container">
+                {(reposError.status || reposError["data"]) && (
+                  <div>
+                    <hr />
+                    <p>Error Code:{reposError.status}</p>
+                    <p>{reposError["data"]["message"]}</p>
+                  </div>
+                )}
+              </div>
+              <h3 className="main-title">Last 5 Starred Repos:</h3>
+              <ul>
+                {(!lastStarredError.status || !lastStarredError["data"]) &&
+                  lastStarred.map(starred => (
+                    <li key={starred.repo.id}>
+                      <span>{starred.repo.full_name}</span>
+                    </li>
+                  ))}
+              </ul>
+              <div className="error-container">
+                {(lastStarredError.status || lastStarredError["data"]) && (
+                  <div>
+                    <hr />
+                    <p>Error Code:{lastStarredError.status}</p>
+                    <p>{lastStarredError["data"]["message"]}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="img-container">
+              <img
+                width="100%"
+                height="100%"
+                className="img"
+                src={avatar}
+                alt={name}
+              />
+            </div>
+          </section>
+        )}
+
+        <section className="error-container">
+          {(this.state.error.status || this.state.error["data"]) && (
+            <div>
+              <hr />
+              <p>Error Code:{this.state.error.status}</p>
+              <p>{this.state.error["data"]["message"]}</p>
+            </div>
+          )}
+        </section>
+      </React.Fragment>
     );
   }
 }
