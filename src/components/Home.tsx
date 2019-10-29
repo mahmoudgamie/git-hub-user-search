@@ -1,7 +1,8 @@
 import React from "react";
 import Search from "./Search";
 import Pagination from "./Pagination";
-import User from "../models/User";
+import IUser from "../models/IUser";
+import IError from "../models/IError";
 import axios from "axios";
 import { Subject, Subscription } from "rxjs";
 import { Observable, EMPTY } from "rxjs";
@@ -9,25 +10,28 @@ import {
   debounceTime,
   distinctUntilChanged,
   switchMap,
-  catchError
+  map
 } from "rxjs/operators";
 import { from } from "rxjs";
 import { Link } from "react-router-dom";
 import "./Home.css";
 
 export interface State {
-  users: User[];
+  users: IUser[];
   paginationLink: string;
-  pageCount: number;
-  error: any;
+  pageCount: number | null;
+  error: IError;
 }
 
 class Home extends React.Component<{}, State> {
   state: State = {
     users: [],
     paginationLink: "",
-    pageCount: 0,
-    error: {}
+    pageCount: null,
+    error: {
+      status: null,
+      statusText: ""
+    }
   };
   subscription$: Subscription = new Subscription();
   searchTerm$ = new Subject<string>();
@@ -38,29 +42,41 @@ class Home extends React.Component<{}, State> {
     if (cashedData) this.setState({ users: JSON.parse(cashedData)["items"] });
     if (paginationLink) this.setState({ paginationLink: paginationLink });
 
-    this.subscription$ = this.search(this.searchTerm$).subscribe(res => {
-      if (res) {
-        this.setState({
-          users: res.data.items,
-          paginationLink: res.headers.link,
-          pageCount: res.data.total_count,
-          error: {}
-        });
-        this.cashData(res);
+    this.subscription$ = this.search(this.searchTerm$).subscribe(
+      (users: IUser[]) => {
+        if (users) {
+          this.setState({
+            users: users,
+            error: {
+              status: 0,
+              statusText: ""
+            }
+          });
+        }
       }
-    });
+    );
   }
 
   componentWillUnmount() {
     this.subscription$.unsubscribe();
   }
 
-  search(terms?: Observable<string>): Observable<any> {
+  search(terms?: Observable<string>): Observable<IUser[]> {
     if (terms) {
       return terms.pipe(
         debounceTime(400),
         distinctUntilChanged(),
-        switchMap(term => this.fetchData(term))
+        switchMap(term => this.fetchData(term)),
+        map(res => {
+          if (res) {
+            this.setState({
+              paginationLink: res.headers.link,
+              pageCount: res.data.total_count
+            });
+            this.cashData(res);
+            return res.data.items;
+          }
+        })
       );
     } else {
       return EMPTY;
@@ -91,7 +107,10 @@ class Home extends React.Component<{}, State> {
                 users: [],
                 paginationLink: "",
                 pageCount: 0,
-                error: err.response
+                error: {
+                  status: err.response.status,
+                  statusText: err.response.statusText
+                }
               });
               this.uncashData();
             }
@@ -102,7 +121,10 @@ class Home extends React.Component<{}, State> {
         users: [],
         paginationLink: "",
         pageCount: 0,
-        error: {}
+        error: {
+          status: 0,
+          statusText: ""
+        }
       });
       return EMPTY;
     }
@@ -124,16 +146,17 @@ class Home extends React.Component<{}, State> {
   };
 
   render() {
+    const { users, paginationLink, pageCount, error } = this.state;
     return (
       <section>
         <Search searchValue={this.update} />
         <Pagination
-          pageCount={this.state.pageCount}
-          url={this.state.paginationLink}
+          pageCount={pageCount}
+          url={paginationLink}
           handlePagination={this.handlePagination}
         />
         <div className="container">
-          {this.state.users.map(user => (
+          {users.map(user => (
             <Link key={user.id} to={`/view-user/${user.login}`}>
               <div className="card">
                 <div className="card-image">
@@ -151,11 +174,11 @@ class Home extends React.Component<{}, State> {
           ))}
         </div>
         <div className="error-container">
-          {(this.state.error.status || this.state.error["data"]) && (
+          {(error.status || error["statusText"]) && (
             <div>
               <hr />
-              <p>Error Code:{this.state.error.status}</p>
-              <p>{this.state.error["data"]["message"]}</p>
+              <p>Error Code:{error.status}</p>
+              <p>{error["statusText"]}</p>
             </div>
           )}
         </div>

@@ -1,7 +1,7 @@
 import * as React from "react";
 
 export interface Props {
-  pageCount: number;
+  pageCount: number | null;
   url: string;
   handlePagination: any;
 }

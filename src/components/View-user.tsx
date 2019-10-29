@@ -1,22 +1,26 @@
 import React from "react";
 import { RouteComponentProps } from "react-router-dom";
 import axios from "axios";
+import IRepo from "../models/IRepo";
+import IStarredRepo from "../models/IStarredRepo";
 import "./View-user.css";
+import IError from "../models/IError";
+import IUserExtended from "../models/IUserExtended";
 
 export interface IViewUserProps
   extends RouteComponentProps<{ username: string }> {}
 
 export interface IVeiwUserState {
   username: string;
-  repos: any[];
+  repos: IRepo[];
   avatar: string;
   name: string;
   followers: number | null;
   location: string;
-  lastStarred: any[];
-  error: any;
-  lastStarredError: any;
-  reposError: any;
+  lastStarred: IStarredRepo[];
+  error: IError;
+  lastStarredError: IError;
+  reposError: IError;
 }
 
 class ViewUser extends React.Component<IViewUserProps, IVeiwUserState> {
@@ -30,9 +34,18 @@ class ViewUser extends React.Component<IViewUserProps, IVeiwUserState> {
       followers: null,
       location: "",
       lastStarred: [],
-      error: {},
-      lastStarredError: {},
-      reposError: {}
+      error: {
+        status: null,
+        statusText: ""
+      },
+      lastStarredError: {
+        status: null,
+        statusText: ""
+      },
+      reposError: {
+        status: null,
+        statusText: ""
+      }
     };
   }
 
@@ -44,7 +57,9 @@ class ViewUser extends React.Component<IViewUserProps, IVeiwUserState> {
     axios
       .get(`https://api.github.com/users/${this.state.username}`)
       .then(res => {
-        const data = res.data;
+        const data: IUserExtended = res.data;
+        console.log(data);
+
         this.setState({
           name: data.name,
           avatar: data.avatar_url,
@@ -98,7 +113,6 @@ class ViewUser extends React.Component<IViewUserProps, IVeiwUserState> {
 
   render() {
     const {
-      username,
       repos,
       name,
       avatar,
@@ -111,7 +125,7 @@ class ViewUser extends React.Component<IViewUserProps, IVeiwUserState> {
     } = this.state;
     return (
       <React.Fragment>
-        {(!error.status || !error["data"]) && (
+        {(!error.status || !error.status) && (
           <section className="main-container">
             <div className="details-container">
               <h3 className="main-title">General Info:</h3>
@@ -134,7 +148,7 @@ class ViewUser extends React.Component<IViewUserProps, IVeiwUserState> {
               </ul>
               <h3 className="main-title">Last 5 Repos:</h3>
               <ul>
-                {(!reposError.status || !reposError["data"]) &&
+                {(!reposError.status || !reposError.status) &&
                   repos.map(repo => (
                     <li key={repo.id}>
                       <span>{repo.full_name}</span>
@@ -142,17 +156,18 @@ class ViewUser extends React.Component<IViewUserProps, IVeiwUserState> {
                   ))}
               </ul>
               <div className="error-container">
-                {(reposError.status || reposError["data"]) && (
+                {(reposError.status || reposError["statusText"]) && (
                   <div>
                     <hr />
                     <p>Error Code:{reposError.status}</p>
-                    <p>{reposError["data"]["message"]}</p>
+                    <p>{reposError["statusText"]}</p>
                   </div>
                 )}
               </div>
               <h3 className="main-title">Last 5 Starred Repos:</h3>
               <ul>
-                {(!lastStarredError.status || !lastStarredError["data"]) &&
+                {(!lastStarredError.status ||
+                  !lastStarredError["statusText"]) &&
                   lastStarred.map(starred => (
                     <li key={starred.repo.id}>
                       <span>{starred.repo.full_name}</span>
@@ -160,11 +175,12 @@ class ViewUser extends React.Component<IViewUserProps, IVeiwUserState> {
                   ))}
               </ul>
               <div className="error-container">
-                {(lastStarredError.status || lastStarredError["data"]) && (
+                {(lastStarredError.status ||
+                  lastStarredError["statusText"]) && (
                   <div>
                     <hr />
                     <p>Error Code:{lastStarredError.status}</p>
-                    <p>{lastStarredError["data"]["message"]}</p>
+                    <p>{lastStarredError["statusText"]}</p>
                   </div>
                 )}
               </div>
@@ -182,11 +198,11 @@ class ViewUser extends React.Component<IViewUserProps, IVeiwUserState> {
         )}
 
         <section className="error-container">
-          {(this.state.error.status || this.state.error["data"]) && (
+          {(this.state.error.status || this.state.error["statusText"]) && (
             <div>
               <hr />
               <p>Error Code:{this.state.error.status}</p>
-              <p>{this.state.error["data"]["message"]}</p>
+              <p>{this.state.error["statusText"]}</p>
             </div>
           )}
         </section>
