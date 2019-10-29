@@ -5,7 +5,12 @@ import User from "../models/User";
 import axios from "axios";
 import { Subject, Subscription } from "rxjs";
 import { Observable, EMPTY } from "rxjs";
-import { debounceTime, distinctUntilChanged, switchMap } from "rxjs/operators";
+import {
+  debounceTime,
+  distinctUntilChanged,
+  switchMap,
+  catchError
+} from "rxjs/operators";
 import { from } from "rxjs";
 import { Link } from "react-router-dom";
 import "./Home.css";
@@ -14,13 +19,15 @@ export interface State {
   users: User[];
   paginationLink: string;
   pageCount: number;
+  error: any;
 }
 
 class Home extends React.Component<{}, State> {
   state: State = {
     users: [],
     paginationLink: "",
-    pageCount: 0
+    pageCount: 0,
+    error: {}
   };
   subscription$: Subscription = new Subscription();
   searchTerm$ = new Subject<string>();
@@ -36,7 +43,8 @@ class Home extends React.Component<{}, State> {
         this.setState({
           users: res.data.items,
           paginationLink: res.headers.link,
-          pageCount: res.data.total_count
+          pageCount: res.data.total_count,
+          error: {}
         });
         this.cashData(res);
       }
@@ -64,7 +72,12 @@ class Home extends React.Component<{}, State> {
     sessionStorage.setItem("paginationLink", res.headers.link);
   }
 
-  fetchData(term: string, url?: string): Observable<any> {
+  uncashData() {
+    sessionStorage.removeItem("data");
+    sessionStorage.removeItem("paginationLink");
+  }
+
+  fetchData(term: string): Observable<any> {
     axios.defaults.headers = {
       Accept: "application/vnd.github.v3+json"
     };
@@ -72,13 +85,24 @@ class Home extends React.Component<{}, State> {
       return from(
         axios
           .get(`https://api.github.com/search/users?q=${term}`)
-          .catch(err => console.log(err))
+          .catch(err => {
+            if (err.response) {
+              this.setState({
+                users: [],
+                paginationLink: "",
+                pageCount: 0,
+                error: err.response
+              });
+              this.uncashData();
+            }
+          })
       );
     } else {
       this.setState({
         users: [],
         paginationLink: "",
-        pageCount: 0
+        pageCount: 0,
+        error: {}
       });
       return EMPTY;
     }
@@ -103,7 +127,6 @@ class Home extends React.Component<{}, State> {
     return (
       <section>
         <Search searchValue={this.update} />
-
         <Pagination
           pageCount={this.state.pageCount}
           url={this.state.paginationLink}
@@ -126,6 +149,15 @@ class Home extends React.Component<{}, State> {
               </div>
             </Link>
           ))}
+        </div>
+        <div className="error-container">
+          {(this.state.error.status || this.state.error["data"]) && (
+            <div>
+              <hr />
+              <p>Error Code:{this.state.error.status}</p>
+              <p>{this.state.error["data"]["message"]}</p>
+            </div>
+          )}
         </div>
       </section>
     );
