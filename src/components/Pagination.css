@@ -1,0 +1,18 @@
+.pagination-container {
+  text-align: center;
+}
+
+.pagination-btn {
+  padding: 5px;
+  margin: 5px;
+  border-radius: 5px;
+  border: 1px solid #02b3e4;
+  background-color: #02b3e4;
+  color: #fff;
+  cursor: pointer;
+}
+
+.pagination-btn:hover {
+  border: 1px solid #054e63;
+  background-color: #054e63;
+}
