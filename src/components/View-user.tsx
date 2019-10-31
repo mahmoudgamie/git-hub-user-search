@@ -6,6 +6,7 @@ import IStarredRepo from "../models/IStarredRepo";
 import "./View-user.css";
 import IError from "../models/IError";
 import IUserExtended from "../models/IUserExtended";
+import Spinner from "./Spinner";
 
 export interface IViewUserProps
   extends RouteComponentProps<{ username: string }> {}
@@ -21,6 +22,7 @@ export interface IVeiwUserState {
   error: IError;
   lastStarredError: IError;
   reposError: IError;
+  activateSpinner: boolean;
 }
 
 class ViewUser extends React.Component<IViewUserProps, IVeiwUserState> {
@@ -45,7 +47,8 @@ class ViewUser extends React.Component<IViewUserProps, IVeiwUserState> {
       reposError: {
         status: null,
         statusText: ""
-      }
+      },
+      activateSpinner: false
     };
   }
 
@@ -54,24 +57,25 @@ class ViewUser extends React.Component<IViewUserProps, IVeiwUserState> {
   }
 
   fetchUser() {
+    this.setState({ activateSpinner: true });
     axios
       .get(`https://api.github.com/users/${this.state.username}`)
       .then(res => {
         const data: IUserExtended = res.data;
-        console.log(data);
-
         this.setState({
           name: data.name,
           avatar: data.avatar_url,
           location: data.location,
-          followers: data.followers
+          followers: data.followers,
+          activateSpinner: false
         });
         this.fetchRepos();
         this.fetchStarred();
       })
       .catch(err => {
         this.setState({
-          error: err.response
+          error: err.response,
+          activateSpinner: false
         });
       });
   }
@@ -121,81 +125,84 @@ class ViewUser extends React.Component<IViewUserProps, IVeiwUserState> {
       lastStarred,
       error,
       lastStarredError,
-      reposError
+      reposError,
+      activateSpinner
     } = this.state;
     return (
       <React.Fragment>
-        {(!error.status || !error.status) && (
-          <section className="main-container">
-            <div className="details-container">
-              <h3 className="main-title">General Info:</h3>
-              <ul>
-                <li>
-                  <span className="info-title">
-                    Name: <span>{name}</span>
-                  </span>
-                </li>
-                <li>
-                  <span className="info-title">
-                    Location: <span>{location}</span>
-                  </span>
-                </li>
-                <li>
-                  <span className="info-title">
-                    Number Of Followers: <span>{followers}</span>
-                  </span>
-                </li>
-              </ul>
-              <h3 className="main-title">Last 5 Repos:</h3>
-              <ul>
-                {(!reposError.status || !reposError.status) &&
-                  repos.map(repo => (
-                    <li key={repo.id}>
-                      <span>{repo.full_name}</span>
-                    </li>
-                  ))}
-              </ul>
-              <div className="error-container">
-                {(reposError.status || reposError["statusText"]) && (
-                  <div>
-                    <hr />
-                    <p>Error Code:{reposError.status}</p>
-                    <p>{reposError["statusText"]}</p>
-                  </div>
-                )}
+        <Spinner activate={activateSpinner} />
+        {(!error.status || !error.status) &&
+          (!activateSpinner && (
+            <section className="main-container">
+              <div className="details-container">
+                <h3 className="main-title">General Info:</h3>
+                <ul>
+                  <li>
+                    <span className="info-title">
+                      Name: <span>{name}</span>
+                    </span>
+                  </li>
+                  <li>
+                    <span className="info-title">
+                      Location: <span>{location}</span>
+                    </span>
+                  </li>
+                  <li>
+                    <span className="info-title">
+                      Number Of Followers: <span>{followers}</span>
+                    </span>
+                  </li>
+                </ul>
+                <h3 className="main-title">Last 5 Repos:</h3>
+                <ul>
+                  {(!reposError.status || !reposError.status) &&
+                    repos.map(repo => (
+                      <li key={repo.id}>
+                        <span>{repo.full_name}</span>
+                      </li>
+                    ))}
+                </ul>
+                <div className="error-container">
+                  {(reposError.status || reposError["statusText"]) && (
+                    <div>
+                      <hr />
+                      <p>Error Code:{reposError.status}</p>
+                      <p>{reposError["statusText"]}</p>
+                    </div>
+                  )}
+                </div>
+                <h3 className="main-title">Last 5 Starred Repos:</h3>
+                <ul>
+                  {(!lastStarredError.status ||
+                    !lastStarredError["statusText"]) &&
+                    lastStarred.map(starred => (
+                      <li key={starred.repo.id}>
+                        <span>{starred.repo.full_name}</span>
+                      </li>
+                    ))}
+                </ul>
+                <div className="error-container">
+                  {(lastStarredError.status ||
+                    lastStarredError["statusText"]) && (
+                    <div>
+                      <hr />
+                      <p>Error Code:{lastStarredError.status}</p>
+                      <p>{lastStarredError["statusText"]}</p>
+                    </div>
+                  )}
+                </div>
               </div>
-              <h3 className="main-title">Last 5 Starred Repos:</h3>
-              <ul>
-                {(!lastStarredError.status ||
-                  !lastStarredError["statusText"]) &&
-                  lastStarred.map(starred => (
-                    <li key={starred.repo.id}>
-                      <span>{starred.repo.full_name}</span>
-                    </li>
-                  ))}
-              </ul>
-              <div className="error-container">
-                {(lastStarredError.status ||
-                  lastStarredError["statusText"]) && (
-                  <div>
-                    <hr />
-                    <p>Error Code:{lastStarredError.status}</p>
-                    <p>{lastStarredError["statusText"]}</p>
-                  </div>
-                )}
+              <div className="img-container">
+                <img
+                  width="100%"
+                  height="100%"
+                  className="img"
+                  src={avatar}
+                  alt={name}
+                />
               </div>
-            </div>
-            <div className="img-container">
-              <img
-                width="100%"
-                height="100%"
-                className="img"
-                src={avatar}
-                alt={name}
-              />
-            </div>
-          </section>
-        )}
+            </section>
+          ))}
 
         <section className="error-container">
           {(this.state.error.status || this.state.error["statusText"]) && (

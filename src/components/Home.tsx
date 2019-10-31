@@ -15,6 +15,7 @@ import {
 import { from } from "rxjs";
 import { Link } from "react-router-dom";
 import "./Home.css";
+import Spinner from "./Spinner";
 
 export interface State {
   users: IUser[];
@@ -22,6 +23,7 @@ export interface State {
   pageCount: number | null;
   error: IError;
   searchTerm: string;
+  activateSpinner: boolean;
 }
 
 class Home extends React.Component<{}, State> {
@@ -33,7 +35,8 @@ class Home extends React.Component<{}, State> {
       status: null,
       statusText: ""
     },
-    searchTerm: ""
+    searchTerm: "",
+    activateSpinner: false
   };
   subscription$: Subscription = new Subscription();
   searchTerm$ = new Subject<string>();
@@ -70,15 +73,20 @@ class Home extends React.Component<{}, State> {
         debounceTime(400),
         distinctUntilChanged(),
         switchMap(term => {
-          console.log(term);
           sessionStorage.setItem("searchTerm", term);
+          this.setState({
+            activateSpinner: true,
+            users: [],
+            paginationLink: ""
+          });
           return this.fetchData(term);
         }),
         map(res => {
           if (res) {
             this.setState({
               paginationLink: res.headers.link,
-              pageCount: res.data.total_count
+              pageCount: res.data.total_count,
+              activateSpinner: false
             });
             this.cashData(res);
             return res.data.items;
@@ -95,9 +103,10 @@ class Home extends React.Component<{}, State> {
     sessionStorage.setItem("paginationLink", res.headers.link);
   }
 
-  uncashData() {
+  unCashData() {
     sessionStorage.removeItem("data");
     sessionStorage.removeItem("paginationLink");
+    sessionStorage.removeItem("searchTerm");
   }
 
   fetchData(term: string): Observable<any> {
@@ -117,17 +126,20 @@ class Home extends React.Component<{}, State> {
                 error: {
                   status: err.response.status,
                   statusText: err.response.statusText
-                }
+                },
+                activateSpinner: false
               });
-              this.uncashData();
+              this.unCashData();
             }
           })
       );
     } else {
+      this.unCashData();
       this.setState({
         users: [],
         paginationLink: "",
         pageCount: 0,
+        activateSpinner: false,
         error: {
           status: 0,
           statusText: ""
@@ -142,21 +154,32 @@ class Home extends React.Component<{}, State> {
   };
 
   handlePagination = (url: string) => {
+    this.setState({ activateSpinner: true, users: [], paginationLink: "" });
     axios
       .get(url)
       .then(res => {
-        this.setState({ paginationLink: res.headers.link });
-        this.setState({ users: res.data.items });
+        this.setState({
+          paginationLink: res.headers.link,
+          users: res.data.items,
+          activateSpinner: false
+        });
         this.cashData(res);
       })
       .catch(err => console.log(err));
   };
 
   render() {
-    const { users, paginationLink, pageCount, error } = this.state;
+    const {
+      users,
+      paginationLink,
+      pageCount,
+      error,
+      activateSpinner
+    } = this.state;
     return (
       <section>
         <Search value={this.state.searchTerm} searchValue={this.update} />
+        <Spinner activate={activateSpinner} />
         <Pagination
           pageCount={pageCount}
           url={paginationLink}
