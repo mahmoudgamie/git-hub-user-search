@@ -1,5 +1,4 @@
 import React, { FormEvent } from "react";
-import { Link } from "react-router-dom";
 import "./Search.css";
 
 export interface ISearchState {
@@ -16,8 +15,11 @@ class Search extends React.Component<ISearchProps, ISearchState> {
     username: ""
   };
 
-  setUsername = (e: FormEvent<HTMLInputElement>) => {
+  setUsername = (e: FormEvent<HTMLInputElement> | any) => {
     this.setState({ username: e.currentTarget.value });
+    if (e.key === "Enter") {
+      window.location.href = `https://github.com/${e.currentTarget.value}`;
+    }
   };
 
   render() {
@@ -37,26 +39,27 @@ class Search extends React.Component<ISearchProps, ISearchState> {
             />
           </label>
         </div>
-        <form>
-          <div className="field-control">
-            <label>
-              Go to user
-              <div className="search-box-wrapper">
-                <input
-                  type="text"
-                  className="search-box-input"
-                  placeholder="Type in a username"
-                  onKeyUp={e => this.setUsername(e)}
-                />
-                <Link className="link" to={`/view-user/${username}`}>
-                  <button className="search-box-btn" type="submit">
-                    &#128269;
-                  </button>
-                </Link>
-              </div>
-            </label>
-          </div>
-        </form>
+        <div className="field-control">
+          <label>
+            Go To User Profile
+            <div className="search-box-wrapper">
+              <input
+                type="text"
+                className="search-box-input"
+                placeholder="Type in a username"
+                onKeyUp={e => this.setUsername(e)}
+              />
+              <button
+                className="search-box-btn"
+                onClick={() =>
+                  (window.location.href = `https://github.com/${username}`)
+                }
+              >
+                &#128269;
+              </button>
+            </div>
+          </label>
+        </div>
       </div>
     );
   }
