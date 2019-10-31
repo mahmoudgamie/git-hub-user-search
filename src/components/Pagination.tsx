@@ -22,53 +22,55 @@ class Pagination extends React.Component<Props> {
           };
         })
         .map((btn, i) => {
-          if (btn.title.includes("first")) {
-            return (
-              <button
-                className="pagination-btn"
-                type="button"
-                key={i}
-                onClick={() => this.props.handlePagination(btn.url)}
-              >
-                First
-              </button>
-            );
-          }
-          if (btn.title.includes("next")) {
-            return (
-              <button
-                className="pagination-btn"
-                type="button"
-                key={i}
-                onClick={() => this.props.handlePagination(btn.url)}
-              >
-                Next
-              </button>
-            );
-          }
-          if (btn.title.includes("prev")) {
-            return (
-              <button
-                className="pagination-btn"
-                type="button"
-                key={i}
-                onClick={() => this.props.handlePagination(btn.url)}
-              >
-                Prev
-              </button>
-            );
-          }
-          if (btn.title.includes("last")) {
-            return (
-              <button
-                className="pagination-btn"
-                type="button"
-                key={i}
-                onClick={() => this.props.handlePagination(btn.url)}
-              >
-                Last
-              </button>
-            );
+          if (btn && btn.title) {
+            if (btn.title.includes("first")) {
+              return (
+                <button
+                  className="pagination-btn"
+                  type="button"
+                  key={i}
+                  onClick={() => this.props.handlePagination(btn.url)}
+                >
+                  First
+                </button>
+              );
+            }
+            if (btn.title.includes("next")) {
+              return (
+                <button
+                  className="pagination-btn"
+                  type="button"
+                  key={i}
+                  onClick={() => this.props.handlePagination(btn.url)}
+                >
+                  Next
+                </button>
+              );
+            }
+            if (btn.title.includes("prev")) {
+              return (
+                <button
+                  className="pagination-btn"
+                  type="button"
+                  key={i}
+                  onClick={() => this.props.handlePagination(btn.url)}
+                >
+                  Prev
+                </button>
+              );
+            }
+            if (btn.title.includes("last")) {
+              return (
+                <button
+                  className="pagination-btn"
+                  type="button"
+                  key={i}
+                  onClick={() => this.props.handlePagination(btn.url)}
+                >
+                  Last
+                </button>
+              );
+            }
           }
         });
     }
