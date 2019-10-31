@@ -1,4 +1,4 @@
-import React from "react";
+import React, { FormEvent } from "react";
 import Search from "./Search";
 import Pagination from "./Pagination";
 import IUser from "../models/IUser";
@@ -21,6 +21,7 @@ export interface State {
   paginationLink: string;
   pageCount: number | null;
   error: IError;
+  searchTerm: string;
 }
 
 class Home extends React.Component<{}, State> {
@@ -31,17 +32,19 @@ class Home extends React.Component<{}, State> {
     error: {
       status: null,
       statusText: ""
-    }
+    },
+    searchTerm: ""
   };
   subscription$: Subscription = new Subscription();
   searchTerm$ = new Subject<string>();
 
   componentDidMount() {
+    const searchTerm = sessionStorage.getItem("searchTerm");
     const cashedData = sessionStorage.getItem("data");
     const paginationLink = sessionStorage.getItem("paginationLink");
     if (cashedData) this.setState({ users: JSON.parse(cashedData)["items"] });
     if (paginationLink) this.setState({ paginationLink: paginationLink });
-
+    if (searchTerm) this.setState({ searchTerm: searchTerm });
     this.subscription$ = this.search(this.searchTerm$).subscribe(
       (users: IUser[]) => {
         if (users) {
@@ -66,7 +69,11 @@ class Home extends React.Component<{}, State> {
       return terms.pipe(
         debounceTime(400),
         distinctUntilChanged(),
-        switchMap(term => this.fetchData(term)),
+        switchMap(term => {
+          console.log(term);
+          sessionStorage.setItem("searchTerm", term);
+          return this.fetchData(term);
+        }),
         map(res => {
           if (res) {
             this.setState({
@@ -130,8 +137,8 @@ class Home extends React.Component<{}, State> {
     }
   }
 
-  update = (e: any) => {
-    this.searchTerm$.next(e.target.value);
+  update = (e: FormEvent<HTMLInputElement>) => {
+    this.searchTerm$.next(e.currentTarget.value);
   };
 
   handlePagination = (url: string) => {
@@ -149,7 +156,7 @@ class Home extends React.Component<{}, State> {
     const { users, paginationLink, pageCount, error } = this.state;
     return (
       <section>
-        <Search searchValue={this.update} />
+        <Search value={this.state.searchTerm} searchValue={this.update} />
         <Pagination
           pageCount={pageCount}
           url={paginationLink}

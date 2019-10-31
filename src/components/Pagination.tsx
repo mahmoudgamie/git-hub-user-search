@@ -4,7 +4,7 @@ import "./Pagination.css";
 export interface Props {
   pageCount: number | null;
   url: string;
-  handlePagination: any;
+  handlePagination: (url: string) => void;
 }
 
 class Pagination extends React.Component<Props> {
@@ -75,7 +75,7 @@ class Pagination extends React.Component<Props> {
   }
 
   render() {
-    const { pageCount, url, handlePagination } = this.props;
+    const { url } = this.props;
     let btns = this.getPaginationLinks(url);
     //reording buttons
     if (btns && btns.length === 4) {

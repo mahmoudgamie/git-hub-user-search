@@ -1,4 +1,4 @@
-import React from "react";
+import React, { FormEvent } from "react";
 import { Link } from "react-router-dom";
 import "./Search.css";
 
@@ -7,7 +7,8 @@ export interface ISearchState {
 }
 
 export interface ISearchProps {
-  searchValue: any;
+  searchValue: (e: FormEvent<HTMLInputElement>) => void;
+  value: string;
 }
 
 class Search extends React.Component<ISearchProps, ISearchState> {
@@ -15,11 +16,13 @@ class Search extends React.Component<ISearchProps, ISearchState> {
     username: ""
   };
 
-  setUsername = (e: any) => {
-    this.setState({ username: e.target.value });
+  setUsername = (e: FormEvent<HTMLInputElement>) => {
+    this.setState({ username: e.currentTarget.value });
   };
 
   render() {
+    const { username } = this.state;
+    const { value, searchValue } = this.props;
     return (
       <div className="search-container">
         <div className="field-control">
@@ -29,7 +32,8 @@ class Search extends React.Component<ISearchProps, ISearchState> {
               className="search-input"
               type="text"
               placeholder="Search..."
-              onKeyUp={e => this.props.searchValue(e)}
+              defaultValue={value}
+              onKeyUp={e => searchValue(e)}
             />
           </label>
         </div>
@@ -44,7 +48,7 @@ class Search extends React.Component<ISearchProps, ISearchState> {
                   placeholder="Type in a username"
                   onKeyUp={e => this.setUsername(e)}
                 />
-                <Link className="link" to={`/view-user/${this.state.username}`}>
+                <Link className="link" to={`/view-user/${username}`}>
                   <button className="search-box-btn" type="submit">
                     &#128269;
                   </button>
